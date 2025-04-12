@@ -114,9 +114,36 @@ LocalisationMessages_t brazilian_portuguese = {
 //    
 //};
 
-//LocalisationMessages_t italian = {
-//    
-//};
+LocalisationMessages_t italian = {
+    // Error Messagebox
+    L"Sfortunatamente si \u00E8 verificato un errore durante l'esecuzione della Fase %i\n\nL'applicazione verr\u00E0 chiusa",
+    L"Ho capito",
+    // Dashlaunch load status
+    L"Dashlaunch: Caricato! %ls",
+    L"[Modalit\u00E0 HDD]",
+    L"[Modalit\u00E0 USB] NON SCOLLEGARE L'USB!",
+    L"Dashlaunch: FALLITO! - Impossibile scrivere lhelper.xex. Errore nei dati della sezione.",
+    L"Dashlaunch: FALLITO! - Impossibile scrivere lhelper.xex. Errore durante il montaggio.",
+    L"Dashlaunch: FALLITO! - Impossibile scrivere lhelper.xex sul dispositivo di archiviazione.",
+    L"Dashlaunch: FALLITO! - Impossibile caricare launch.xex. Errore nei dati della sezione.",
+    L"Dashlaunch: FALLITO! - Stato: %X",
+    // Dump 1BL Notify
+    L"[Dump1blRomToFile] FALLITO! Risultato non nullo da Hvx...",
+    L"Salvato in %S-1bl.bin",
+    L"[Dump1blRomToFile] FALLITO! Impossibile scrivere il file...",
+    // Save Console Info Notify
+    L"Salvato in ConsoleInfo.txt",
+    L"Salvataggio fallito!",
+    // Save Orig MAC
+    L"MAC originale salvato in OriginalMACAddress.bin",
+    L"Impossibile salvare il MAC originale!",
+    // Main Screen Text
+    L"Tutte le patch sono state applicate!\nOra la normale funzionalit\u00E0 JTAG/RGH dovrebbe essere operativa sul tuo sistema.\n\nQUESTO CAMBIAMENTO NON \u00C8 PERMANENTE!\nLa tua console torner\u00E0 a uno stato completamente originale non appena verr\u00E0 spenta.\n\u00C8 ALTAMENTE consigliato effettuare subito un dump della tua NAND!",
+    L"I plugin configurati in launch.ini verranno caricati all'uscita dall'applicazione.\nSe abilitato in launch.ini, LiveBlock dovrebbe ora funzionare correttamente.\nCollega il cavo Ethernet prima di uscire, per permettere ai moduli stealth di autenticarsi correttamente.",
+    GLYPH_X_BUTTON L" Salva le informazioni su file",
+    GLYPH_Y_BUTTON L" Esegui il dump di 1BL su file",
+    L"Premi " GLYPH_BACK_BUTTON L" per uscire"
+};
 
 
 // Launguages below here won't work without a new font to support the characters???
