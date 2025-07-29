@@ -19,7 +19,7 @@ jobs:
       shell: pwsh
       run: |
         if (-not $env:XDK_DIR) {
-          echo "XDK_DIR is not set. Please set it as a secret in your repository settings."
+          Write-Host "XDK_DIR is not set. Please set it as a secret in your repository settings."
           exit 1
         }
 
