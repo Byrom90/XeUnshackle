@@ -28,7 +28,7 @@ jobs:
         msbuild XeUnshackle.sln /p:Configuration=Release_LTCG /p:Platform="Xbox 360"
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: default.xex
         path: "Release_LTCG/COPY_TO_BadUpdatePayload_FOLDER/default.xex"
