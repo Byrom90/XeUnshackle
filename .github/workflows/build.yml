@@ -16,11 +16,12 @@ jobs:
       uses: microsoft/setup-msbuild@v1.1
 
     - name: Check for XDK_DIR
+      shell: pwsh
       run: |
-        if [ -z "${{ secrets.XDK_DIR }}" ]; then
+        if (-not $env:XDK_DIR) {
           echo "XDK_DIR is not set. Please set it as a secret in your repository settings."
           exit 1
-        fi
+        }
 
     - name: Build the solution
       run: |
