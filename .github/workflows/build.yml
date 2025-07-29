@@ -1,0 +1,34 @@
+name: Build XeUnshackle
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up MSBuild
+      uses: microsoft/setup-msbuild@v1.1
+
+    - name: Check for XDK_DIR
+      run: |
+        if [ -z "${{ secrets.XDK_DIR }}" ]; then
+          echo "XDK_DIR is not set. Please set it as a secret in your repository settings."
+          exit 1
+        fi
+
+    - name: Build the solution
+      run: |
+        $env:XDK_DIR = "${{ secrets.XDK_DIR }}"
+        msbuild XeUnshackle.sln /p:Configuration=Release_LTCG /p:Platform="Xbox 360"
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: default.xex
+        path: "Release_LTCG/COPY_TO_BadUpdatePayload_FOLDER/default.xex"
