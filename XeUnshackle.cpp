@@ -33,6 +33,9 @@ const CHAR* g_strMovieName = "embed:\\VID";
 extern D3DDevice* g_pd3dDevice;
 DWORD YellowText = 0xFFFFFF00;
 DWORD WhiteText = 0xFFFFFFFF;
+DWORD GreyText = 0xFF808080;
+DOUBLE dDefaultAutoStartTimer = 2; // 2 seconds
+DOUBLE dSavedAutoStartTimer = -1.0;
 BOOL bShouldPlaySuccessVid = FALSE;
 WCHAR wTitleHeaderBuf[100];
 WCHAR wCPUKeyBuf[150];
@@ -68,6 +71,20 @@ class XeUnshackle : public ATG::Application
     BOOL m_bDrawHelp;
 
     BOOL m_bFailed;
+
+    // Countdown timer to app exiting when using Auto-Start
+    DOUBLE m_autoStartExitTimer;
+
+public:
+    VOID SetAutoStartExitTimer(DOUBLE timerValue)
+    {
+        if (timerValue >= 0.0)
+        {
+            bShouldPlaySuccessVid = FALSE;
+            m_Timer.GetElapsedTime(); // Prime the timer to reset the value since last call
+        }
+        m_autoStartExitTimer = timerValue;
+    }
 
 private:
     virtual HRESULT Initialize();
@@ -182,6 +199,30 @@ HRESULT XeUnshackle::Update()
     // Get the current gamepad state
     ATG::GAMEPAD* pGamepad = ATG::Input::GetMergedInput();
 
+    // If the Auto-Start timer is active, count it down
+    if(m_autoStartExitTimer >= 0.0)
+    {
+        if (!DisableButtons)
+        {
+            if (pGamepad->wPressedButtons & XINPUT_GAMEPAD_B)
+            {
+                SetAutoStartExitTimer(-1.0);
+                return S_OK;
+            }
+        }
+        
+        m_autoStartExitTimer -= m_Timer.GetElapsedTime();
+
+        // When the timer runs out, launch the default app
+        if(m_autoStartExitTimer <= 0.0)
+        {
+            XLaunchNewImage(XLAUNCH_KEYWORD_DEFAULT_APP, 0);
+        }
+
+        // Return here so video playback and button presses are not processed when using Auto-Start
+        return S_OK;
+    }
+
     if (m_xmvPlayer)
     {
         // 'B' means cancel the movie.
@@ -249,6 +290,18 @@ HRESULT XeUnshackle::Update()
             if (pGamepad->wPressedButtons & XINPUT_GAMEPAD_BACK)
             {
                 XLaunchNewImage(XLAUNCH_KEYWORD_DEFAULT_APP, 0);
+            }
+            else if (pGamepad->wPressedButtons & XINPUT_GAMEPAD_START)
+            {
+                if (dSavedAutoStartTimer >= 0.0)
+                {
+                    SetAutoStartExitTimer(dSavedAutoStartTimer);
+                }
+                else
+                {
+                    SaveAutoStart(dDefaultAutoStartTimer);
+                    SetAutoStartExitTimer(dDefaultAutoStartTimer);
+                }
             }
             else if (pGamepad->wPressedButtons & XINPUT_GAMEPAD_X)
             {
@@ -343,12 +396,28 @@ HRESULT XeUnshackle::Render()
 
         m_Font.DrawText(0, 570, YellowText, L"https://github.com/Byrom90/XeUnshackle");
         m_Font.DrawText(0, 600, YellowText, L"https://byrom.uk");
+        
+        // If the timer is not active, draw the normal button prompts, otherwise draw the countdown text
+        if (m_autoStartExitTimer < 0.0)
+        {
+            // User input with buttons - Make these white so they display correctly and stand out to the user
+            m_Font.DrawText(740, 490, WhiteText, currentLocalisation->MainScrBtnSaveInfo);// X button icon with text 
+            m_Font.DrawText(740, 520, WhiteText, currentLocalisation->MainScrBtnDump1BL);// Y button icon with text
 
-        // User input with buttons - Make these white so they display correctly and stand out to the user
-        m_Font.DrawText(840, 530, WhiteText, currentLocalisation->MainScrBtnSaveInfo);// X button icon with text 
-        m_Font.DrawText(840, 560, WhiteText, currentLocalisation->MainScrBtnDump1BL);// Y button icon with text
+            m_Font.DrawText(740, 560, WhiteText, currentLocalisation->MainScrBtnExit);// Back button icon with text
+            m_Font.DrawText(740, 600, WhiteText, currentLocalisation->MainScrBtnAutoStartSet);// Start button icon with text
+        }
+        else
+        {
+            // Format the string to include countdown value
+            WCHAR szCountdown[150];
+            swprintf_s(szCountdown, currentLocalisation->MainScrAutoStartRunning, m_autoStartExitTimer);
 
-        m_Font.DrawText(840, 600, WhiteText, currentLocalisation->MainScrBtnExit);// Back button icon with text
+            // Draw the countdown text where the button prompts would normally be
+            m_Font.DrawText(740, 570, GreyText, szCountdown);
+            m_Font.DrawText(740, 600, WhiteText, currentLocalisation->MainScrBtnAutoStartCancel);// B button icon with text
+        }
+
         m_Font.End();
     }
 
@@ -497,5 +566,10 @@ VOID __cdecl main()
     atgApp.m_d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
     ATG::GetVideoSettings(&atgApp.m_d3dpp.BackBufferWidth, &atgApp.m_d3dpp.BackBufferHeight);
     bShouldPlaySuccessVid = TRUE;
+
+    // Load the saved Auto-Start timer, will return negative value when not saved, so it doesn't trigger countdown
+    dSavedAutoStartTimer = LoadAutoStart();
+    atgApp.SetAutoStartExitTimer(dSavedAutoStartTimer);
+    
     atgApp.Run();
 }

@@ -540,3 +540,59 @@ VOID BackupOrigMAC()
 			ShowNotify(currentLocalisation->Dump_MAC_Fail);
 	}
 }
+
+// Using .txt file instead of .ini so user can delete this easily in XeXMenu/Aurora
+#define AutoStartFilePath "GAME:\\XeUnshackleAutoStart.txt"
+
+// Saves the Auto-Start file with the specified timer value.
+VOID SaveAutoStart(DOUBLE timerValue)
+{
+	DisableButtons = TRUE;
+
+	// Convert the double to a string representation (e.g., "2.00")
+	char szTimerValue[32];
+	sprintf_s(szTimerValue, sizeof(szTimerValue), "%.2f", timerValue);
+
+	// Write the string to the file
+	if (CWriteFile(AutoStartFilePath, szTimerValue, strlen(szTimerValue)))
+		ShowNotify(currentLocalisation->SaveAutoStart_Success);
+	else
+		ShowNotify(currentLocalisation->SaveAutoStart_Fail);
+
+	DisableButtons = FALSE;
+}
+
+// Checks if the Auto-Start file exists and loads the timer value from it.
+// Returns the timer value (e.g., 2.0) on success, or -1.0 if the file doesn't exist or is invalid.
+DOUBLE LoadAutoStart()
+{
+	if (!FileExists(AutoStartFilePath))
+	{
+		return -1.0; // Auto-Start is not enabled.
+	}
+
+	// The file exists, read and validate its content.
+	MemoryBuffer mb;
+	if (!CReadFile(AutoStartFilePath, mb) || mb.GetDataLength() == 0)
+	{
+		cprintf("[Auto-Start] File exists but is empty or could not be read.");
+		return -1.0; // Treat as disabled.
+	}
+
+	// Convert the file content to a double.
+	const char* fileContent = (const char*)mb.GetData();
+	char szBuffer[33] = { 0 };
+	strncpy_s(szBuffer, sizeof(szBuffer), fileContent, mb.GetDataLength());
+	DOUBLE timerValue = atof(szBuffer);
+
+	// Validate the parsed value. It must be a non-negative number.
+	if (timerValue >= 0.0)
+	{
+		return timerValue;
+	}
+	else
+	{
+		cprintf("[Auto-Start] File content '%s' is not a valid timer value.", szBuffer);
+		return -1.0; // The file is corrupt or invalid, treat as disabled.
+	}
+}

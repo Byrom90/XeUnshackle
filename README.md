@@ -28,6 +28,7 @@ Nothing here is particularly new. It's simply a collection of existing code that
 - Restores the default state of the Ring of Light and allows controller syncing to function as normal. Thanks [InvoxiPlayGames](https://github.com/InvoxiPlayGames)
 - Loads a slightly modified version of launch.xex (Dashlaunch). Due to it not being stored within the nands filesystem it is loaded from app memory and lhelper.xex is copied to either Hdd or Usb root depending on what's available at load time.
 - Simple GUI consisting of a short boot animation video followed by a page displaying both the CPUKey and DVDKey of the console.
+- Ability to set "Auto-Start" via button press. This permanently skips the boot animation and exits the simple GUI after a short delay, which can be customized in the `XeUnshackleAutoStart.txt` file.
 - Ability to dump 1BL to file via button press. This may be particularly useful for those wanting to use the Low Level [Xenon](https://github.com/xenon-emu/xenon) Emulator.
 - Automatic dumping of the current MAC address on first load. This is often changed by stealth servers during the initial KV spoofing. Only other way to retrieve the original is from a nand backup taken BEFORE loading a stealth.
 - Applies Usbdsec patches to allow non-360 XInput controllers. Thanks [InvoxiPlayGames](https://github.com/InvoxiPlayGames)
