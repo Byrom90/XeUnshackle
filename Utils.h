@@ -130,3 +130,6 @@ VOID Dump1blRomToFile();
 VOID SaveConsoleDataToFile();
 
 VOID BackupOrigMAC();
+
+VOID SaveAutoStart(DOUBLE timerValue);
+DOUBLE LoadAutoStart();

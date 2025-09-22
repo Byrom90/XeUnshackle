@@ -13,7 +13,6 @@
 //          Visual Studio / GoobyCorp
 //          Diamond
 //          InvoxiPlayGames - FreeMyXe, Usbdsec patches, RoL restore and general help.
-//          Jeff Hamm - https://www.youtube.com/watch?v=PantVXVEVUg - Chain break video
 //          ikari - freeBOOT
 //          Xbox360Hub Discord #coding-corner
 //          Anyone else who has contributed anything to the 360 scene. Apologies if any credits were missed.
@@ -24,14 +23,15 @@
 
 #include "stdafx.h"
 
-FLOAT APP_VERS = 1.02;
-
-const CHAR* g_strMovieName = "embed:\\VID";
+FLOAT APP_VERS = 1.04;
 
 // Get global access to the main D3D device
 extern D3DDevice* g_pd3dDevice;
 DWORD YellowText = 0xFFFFFF00;
 DWORD WhiteText = 0xFFFFFFFF;
+DWORD GreyText = 0xFF808080;
+DOUBLE dDefaultAutoStartTimer = 0; // 0 seconds (will skip the app completely)
+DOUBLE dSavedAutoStartTimer = -1.0;
 BOOL bShouldPlaySuccessVid = FALSE;
 WCHAR wTitleHeaderBuf[100];
 WCHAR wCPUKeyBuf[150];
@@ -45,27 +45,26 @@ WCHAR wConTypeBuf[50];
 //--------------------------------------------------------------------------------------
 class XeUnshackle : public ATG::Application
 {
-    // Pointer to XMV player object.
-    IXMedia2XmvPlayer* m_xmvPlayer;
-    // Structure for controlling where the movie is played.
-    XMEDIA_VIDEO_SCREEN m_videoScreen;
-
-    
-    // Tell XMV player about scaling and rotation parameters.
-    VOID            InitVideoScreen();
-
-    // Buffer for holding XMV data when playing from memory.
-    VOID* m_movieBuffer;
-
-    // XAudio2 object.
-    IXAudio2* m_pXAudio2;
-
     ATG::Timer m_Timer;
     ATG::Font m_Font;
     ATG::Help m_Help;
     BOOL m_bDrawHelp;
 
     BOOL m_bFailed;
+
+    // Countdown timer to app exiting when using Auto Start
+    DOUBLE m_autoStartExitTimer;
+
+public:
+    VOID SetAutoStartExitTimer(DOUBLE timerValue)
+    {
+        if (timerValue >= 0.0)
+        {
+            bShouldPlaySuccessVid = FALSE;
+            m_Timer.GetElapsedTime(); // Prime the timer to reset the value since last call
+        }
+        m_autoStartExitTimer = timerValue;
+    }
 
 private:
     virtual HRESULT Initialize();
@@ -80,24 +79,6 @@ private:
 //--------------------------------------------------------------------------------------
 HRESULT XeUnshackle::Initialize()
 {
-    m_xmvPlayer = 0;
-    m_movieBuffer = 0;
-
-    // Initialize the XAudio2 Engine. The XAudio2 Engine is needed for movie playback.
-    UINT32 flags = 0;
-#ifdef _DEBUG
-    flags |= XAUDIO2_DEBUG_ENGINE;
-#endif
-
-    HRESULT hr = XAudio2Create(&m_pXAudio2, flags);
-    if (FAILED(hr))
-        ATG::FatalError("Error %#X calling XAudio2Create\n", hr);
-
-    IXAudio2MasteringVoice* pMasteringVoice = NULL;
-    hr = m_pXAudio2->CreateMasteringVoice(&pMasteringVoice);
-    if (FAILED(hr))
-        ATG::FatalError("Error %#X calling CreateMasteringVoice\n", hr);
-
     // Create the font
     if (FAILED(m_Font.Create("embed:\\FONT")))
         return ATGAPPERR_MEDIANOTFOUND;
@@ -112,153 +93,65 @@ HRESULT XeUnshackle::Initialize()
 
 
 //--------------------------------------------------------------------------------------
-// Name: InitVideoScreen()
-// Desc: Adjust how the movie is displayed on the screen. Horizontal and vertical
-//      scaling and rotation are applied.
-//--------------------------------------------------------------------------------------
-VOID XeUnshackle::InitVideoScreen()
-{
-    const int width = m_d3dpp.BackBufferWidth;
-    const int height = m_d3dpp.BackBufferHeight;
-    const int hWidth = width / 2;
-    const int hHeight = height / 2;
-
-    // Parameters to control scaling and rotation of video.
-    float m_angle = 0.0;
-    float m_xScale = 1.0;
-    float m_yScale = 1.0;
-
-    // Scale the output width.
-    float left = -hWidth * m_xScale;
-    float right = hWidth * m_xScale;
-    float top = -hHeight * m_yScale;
-    float bottom = hHeight * m_yScale;
-
-    float cosTheta = cos(m_angle);
-    float sinTheta = sin(m_angle);
-
-    // Apply the scaling and rotation.
-    m_videoScreen.aVertices[0].fX = hWidth + (left * cosTheta - top * sinTheta);
-    m_videoScreen.aVertices[0].fY = hHeight + (top * cosTheta + left * sinTheta);
-    m_videoScreen.aVertices[0].fZ = 0;
-
-    m_videoScreen.aVertices[1].fX = hWidth + (right * cosTheta - top * sinTheta);
-    m_videoScreen.aVertices[1].fY = hHeight + (top * cosTheta + right * sinTheta);
-    m_videoScreen.aVertices[1].fZ = 0;
-
-    m_videoScreen.aVertices[2].fX = hWidth + (left * cosTheta - bottom * sinTheta);
-    m_videoScreen.aVertices[2].fY = hHeight + (bottom * cosTheta + left * sinTheta);
-    m_videoScreen.aVertices[2].fZ = 0;
-
-    m_videoScreen.aVertices[3].fX = hWidth + (right * cosTheta - bottom * sinTheta);
-    m_videoScreen.aVertices[3].fY = hHeight + (bottom * cosTheta + right * sinTheta);
-    m_videoScreen.aVertices[3].fZ = 0;
-
-    // Always leave the UV coordinates at the default values.
-    m_videoScreen.aVertices[0].fTu = 0;
-    m_videoScreen.aVertices[0].fTv = 0;
-    m_videoScreen.aVertices[1].fTu = 1;
-    m_videoScreen.aVertices[1].fTv = 0;
-    m_videoScreen.aVertices[2].fTu = 0;
-    m_videoScreen.aVertices[2].fTv = 1;
-    m_videoScreen.aVertices[3].fTu = 1;
-    m_videoScreen.aVertices[3].fTv = 1;
-
-    // Tell the XMV player to use the new settings.
-    // This locks the vertex buffer so it may cause stalls if called every frame.
-    m_xmvPlayer->SetVideoScreen(&m_videoScreen);
-}
-
-
-//--------------------------------------------------------------------------------------
 // Name: Update()
 // Desc: Called once per frame, the call is the entry point for animating the scene.
-//       The movie is played from here.
 //--------------------------------------------------------------------------------------
 HRESULT XeUnshackle::Update()
 {
     // Get the current gamepad state
     ATG::GAMEPAD* pGamepad = ATG::Input::GetMergedInput();
 
-    if (m_xmvPlayer)
+    // If the Auto Start timer is active, count it down
+    if(m_autoStartExitTimer >= 0.0)
     {
-        // 'B' means cancel the movie.
-        if (pGamepad->wPressedButtons & XINPUT_GAMEPAD_B)
-        {
-            m_xmvPlayer->Stop(XMEDIA_STOP_IMMEDIATE);
-        }
-    }
-    else
-    {
-        // Play the movie if required
-        if (bShouldPlaySuccessVid)  //(pGamepad->wPressedButtons & XINPUT_GAMEPAD_A)
-        {
-            XMEDIA_XMV_CREATE_PARAMETERS XmvParams;
-
-            ZeroMemory(&XmvParams, sizeof(XmvParams));
-
-            // Use the default audio and video streams.
-            // If using a wmv file with multiple audio or video streams
-            // (such as different audio streams for different languages)
-            // the dwAudioStreamId & dwVideoStreamId parameters can be used 
-            // to select which audio (or video) stream will be played back
-
-            XmvParams.dwAudioStreamId = XMEDIA_STREAM_ID_USE_DEFAULT;
-            XmvParams.dwVideoStreamId = XMEDIA_STREAM_ID_USE_DEFAULT;
-
-            // Play the movie if required
-            //if (bShouldPlaySuccessVid)  //(pGamepad->wPressedButtons & XINPUT_GAMEPAD_A)
-            //{
-            bShouldPlaySuccessVid = FALSE; // Reset so we don't play again
-            // Start a movie playing from a file.
-            m_bFailed = FALSE;
-
-            // Set the parameters to load the movie from a file.
-            //XmvParams.createType = XMEDIA_CREATE_FROM_FILE;
-            //XmvParams.createFromFile.szFileName = g_strMovieName;
-
-            // Create from embedded resource
-            VOID* pSectionData;
-            DWORD dwSectionSize;
-            HMODULE hModule = GetModuleHandle(NULL);
-            if (XGetModuleSection(hModule, "VID", &pSectionData, &dwSectionSize))
-            {
-
-                XmvParams.createType = XMEDIA_CREATE_FROM_MEMORY;
-                XmvParams.createFromMemory.pvBuffer = pSectionData;
-                XmvParams.createFromMemory.dwBufferSize = dwSectionSize;
-                /// Additional fields can be set to control how file IO is done.
-
-                HRESULT hr = XMedia2CreateXmvPlayer(m_pd3dDevice, m_pXAudio2, &XmvParams, &m_xmvPlayer);
-                if (SUCCEEDED(hr))
-                {
-                    InitVideoScreen();
-                }
-                else
-                {
-                    m_bFailed = TRUE;
-                }
-            }
-            else
-                m_bFailed = TRUE;
-        }
         if (!DisableButtons)
         {
-            if (pGamepad->wPressedButtons & XINPUT_GAMEPAD_BACK)
+            if (pGamepad->wPressedButtons & XINPUT_GAMEPAD_B)
             {
-                XLaunchNewImage(XLAUNCH_KEYWORD_DEFAULT_APP, 0);
-            }
-            else if (pGamepad->wPressedButtons & XINPUT_GAMEPAD_X)
-            {
-                SaveConsoleDataToFile();
-            }
-            else if (pGamepad->wPressedButtons & XINPUT_GAMEPAD_Y)
-            {
-                Dump1blRomToFile();
+                SetAutoStartExitTimer(-1.0);
+                return S_OK;
             }
         }
+        
+        m_autoStartExitTimer -= m_Timer.GetElapsedTime();
+
+        // When the timer runs out, launch the default app
+        if(m_autoStartExitTimer <= 0.0)
+        {
+            XLaunchNewImage(XLAUNCH_KEYWORD_DEFAULT_APP, 0);
+        }
+
+        // Return here so button presses are not processed when using Auto Start
+        return S_OK;
     }
 
+    if (!DisableButtons)
+    {
+        if (pGamepad->wPressedButtons & XINPUT_GAMEPAD_BACK)
+        {
+            XLaunchNewImage(XLAUNCH_KEYWORD_DEFAULT_APP, 0);
+        }
+        else if (pGamepad->wPressedButtons & XINPUT_GAMEPAD_START)
+        {
+            if (dSavedAutoStartTimer >= 0.0)
+            {
+                SetAutoStartExitTimer(dSavedAutoStartTimer);
+            }
+            else
+            {
+                SaveAutoStart(dDefaultAutoStartTimer);
+                SetAutoStartExitTimer(dDefaultAutoStartTimer);
+            }
+        }
+        else if (pGamepad->wPressedButtons & XINPUT_GAMEPAD_X)
+        {
+            SaveConsoleDataToFile();
+        }
+        else if (pGamepad->wPressedButtons & XINPUT_GAMEPAD_Y)
+        {
+            Dump1blRomToFile();
+        }
+    }
 
     return S_OK;
 }
@@ -273,82 +166,59 @@ HRESULT XeUnshackle::Render()
     // Draw a gradient filled background
     //ATG::RenderBackground(0xff0000ff, 0xff000000);
 
-    // If we are currently playing a movie.
-    if (m_xmvPlayer)
+    ATG::RenderBackground(0xFF000032, 0xFF000032);
+    m_Font.Begin();
+    m_Font.SetScaleFactors(1.5f, 1.5f);
+    m_Font.DrawText(0, 0, YellowText, wTitleHeaderBuf);
+
+    // Pre-Release Build Identifier
+    //m_Font.DrawText(840, 0, YellowText, L"[TEST BUILD]");
+    //
+
+    m_Font.SetScaleFactors(1.0f, 1.0f);
+
+    // General Info
+    m_Font.DrawText(0, 70, YellowText, currentLocalisation->MainInfo);
+
+    // Dashlaunch Info
+    m_Font.DrawText(0, 240, YellowText, wDLStatusBuf);
+    if (bDLisLoaded)
     {
-        // If RenderNextFrame does not return S_OK then the frame was not
-        // rendered (perhaps because it was cancelled) so a regular frame
-        // buffer should be rendered before calling present.
-        HRESULT hr = m_xmvPlayer->RenderNextFrame(0, NULL);
-
-        // Reset our cached view of what pixel and vertex shaders are set, because
-        // it is no longer accurate, since XMV will have set their own shaders.
-        // This avoids problems when the shader cache thinks it knows what shader
-        // is set and it is wrong.
-        m_pd3dDevice->SetVertexShader(0);
-        m_pd3dDevice->SetPixelShader(0);
-        m_pd3dDevice->SetVertexDeclaration(0);
-
-        if (FAILED(hr) || hr == (HRESULT)XMEDIA_W_EOF)
-        {
-            // Release the movie object
-            m_xmvPlayer->Release();
-            m_xmvPlayer = 0;
-            // Movie playback changes various D3D states, so you should reset the
-            // states that you need after movie playback is finished.
-            m_pd3dDevice->SetRenderState(D3DRS_VIEWPORTENABLE, TRUE);
-
-            // Free up any memory allocated for playing from memory.
-            if (m_movieBuffer)
-            {
-                free(m_movieBuffer);
-                m_movieBuffer = 0;
-            }
-        }
-
+        m_Font.DrawText(0, 270, YellowText, currentLocalisation->MainScrDL);
     }
 
+    // Console Info
+    m_Font.DrawText(0, 370, YellowText, wConTypeBuf);
+    m_Font.DrawText(0, 400, YellowText, wCPUKeyBuf);
+    m_Font.DrawText(0, 430, YellowText, wDVDKeyBuf);
+
+    // Credits
+    m_Font.DrawText(0, 540, YellowText, L"https://github.com/rezbouchabou/XeUnshackle");
+    m_Font.DrawText(0, 570, YellowText, L"https://github.com/Byrom90/XeUnshackle");
+    m_Font.DrawText(0, 600, YellowText, L"https://byrom.uk");
+
+    // If the timer is not active, draw the normal button prompts, otherwise draw the countdown text
+    if (m_autoStartExitTimer < 0.0)
+    {
+        // User input with buttons - Make these white so they display correctly and stand out to the user
+        m_Font.DrawText(740, 490, WhiteText, currentLocalisation->MainScrBtnSaveInfo);// X button icon with text 
+        m_Font.DrawText(740, 520, WhiteText, currentLocalisation->MainScrBtnDump1BL);// Y button icon with text
+
+        m_Font.DrawText(740, 560, WhiteText, currentLocalisation->MainScrBtnExit);// Back button icon with text
+        m_Font.DrawText(740, 600, WhiteText, currentLocalisation->MainScrBtnAutoStartSet);// Start button icon with text
+    }
     else
     {
-        ATG::RenderBackground(0xFF000032, 0xFF000032);
-        m_Font.Begin();
-        m_Font.SetScaleFactors(1.5f, 1.5f);
-        m_Font.DrawText(0, 0, YellowText, wTitleHeaderBuf);
+        // Format the string to include countdown value
+        WCHAR szCountdown[150];
+        swprintf_s(szCountdown, currentLocalisation->MainScrAutoStartRunning, m_autoStartExitTimer);
 
-        // Pre-Release Build Identifier
-        //m_Font.DrawText(840, 0, WhiteText, L"[TEST BUILD]");
-        //
-
-        m_Font.SetScaleFactors(1.0f, 1.0f);
-
-        // General info
-        m_Font.DrawText(0, 70, YellowText, currentLocalisation->MainInfo);
-
-        // Dashlaunch Info
-        m_Font.DrawText(0, 290, YellowText, wDLStatusBuf);
-        if (bDLisLoaded)
-        {
-            m_Font.DrawText(0, 320, YellowText, currentLocalisation->MainScrDL);
-        }
-
-        // Console Info
-        m_Font.DrawText(0, 460, YellowText, wConTypeBuf);
-        m_Font.DrawText(0, 490, YellowText, wCPUKeyBuf);
-        m_Font.DrawText(0, 520, YellowText, wDVDKeyBuf);
-
-        m_Font.DrawText(0, 570, YellowText, L"https://github.com/Byrom90/XeUnshackle");
-        m_Font.DrawText(0, 600, YellowText, L"https://byrom.uk");
-
-        // User input with buttons - Make these white so they display correctly and stand out to the user
-        m_Font.DrawText(840, 530, WhiteText, currentLocalisation->MainScrBtnSaveInfo);// X button icon with text 
-        m_Font.DrawText(840, 560, WhiteText, currentLocalisation->MainScrBtnDump1BL);// Y button icon with text
-
-        m_Font.DrawText(840, 600, WhiteText, currentLocalisation->MainScrBtnExit);// Back button icon with text
-        m_Font.End();
+        // Draw the countdown text where the button prompts would normally be
+        m_Font.DrawText(740, 570, GreyText, szCountdown);
+        m_Font.DrawText(740, 600, WhiteText, currentLocalisation->MainScrBtnAutoStartCancel);// B button icon with text
     }
 
-    
-    
+    m_Font.End();
 
     // Present the scene
     m_pd3dDevice->Present(NULL, NULL, NULL, NULL);
@@ -456,12 +326,19 @@ VOID __cdecl main()
 
     BackupOrigMAC(); // This will cause a notify to pop before the video has played completely but only if it hasn't been dumped previously
 
-    // Run the ui portion of the app with video etc...
+    // Run the ui portion of the app
     XeUnshackle atgApp;
 
-    // For movie playback we want to synchronize to the monitor.
+    // For direct UI rendering we want to synchronize to the monitor.
     atgApp.m_d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
     ATG::GetVideoSettings(&atgApp.m_d3dpp.BackBufferWidth, &atgApp.m_d3dpp.BackBufferHeight);
-    bShouldPlaySuccessVid = TRUE;
+    
+    // SKIP THE VIDEO - Go straight to UI
+    bShouldPlaySuccessVid = FALSE;
+
+    // Load the saved Auto Start timer, will return negative value when not saved, so it doesn't trigger countdown
+    dSavedAutoStartTimer = LoadAutoStart();
+    atgApp.SetAutoStartExitTimer(dSavedAutoStartTimer);
+    
     atgApp.Run();
 }

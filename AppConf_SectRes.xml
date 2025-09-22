@@ -26,7 +26,6 @@
   <privilege id="6"/> <!-- Insecure Sockets -->
 
 <!-- Add our embedded resources -->
-  <section file="Media/success.wmv" name="VID" memory="RO"/>
   <section file="Media/font.xpr" name="FONT" memory="RO"/>
   <section file="Media/launch-Hdd.xex" name="LXHDD" memory="RO"/>
   <section file="Media/lhelper-Hdd.xex" name="LHHDD" memory="RO"/>

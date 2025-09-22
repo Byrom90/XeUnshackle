@@ -1,7 +1,84 @@
-# XeUnshackle
-![XeUnshackle_Banner](https://github.com/user-attachments/assets/af37d4ae-4ff6-4175-8f81-47869ff63ed6)
+# XeUnshackle 1.04 BETA - Auto-Start
+![XeUnshackle_Banner](XeUnshackle.jpg)
 
-Custom Xbox 360 application designed to be used with the [Xbox360BadUpdate](https://github.com/grimdoomer/Xbox360BadUpdate) exploit.  
+Custom Xbox 360 application designed to be used with:
+[Xbox360BadUpdate](https://github.com/grimdoomer/Xbox360BadUpdate) exploit.
+[ABadAvatar](https://github.com/shutterbug2000/ABadAvatar) exploit.  
+
+## WHAT'S NEW
+- Remove the video animation completely.
+- Ability to set "Auto-Start" via START button. This permanently skips the simple GUI after a short delay, which can be customized in the XeUnshackleAutoStart.txt file. (0.00 skip the app completely) (Credited to: https://github.com/klofi)
+- Changes some UI
+
+IMPORTANT: THIS IS NOT A PERMANENT MODIFICATION. YOUR CONSOLE WILL RETURN TO ITS ORIGINAL STATE UPON SHUTDOWN OR REBOOT. USE AT YOUR OWN RISK.
+
+## SETUP INSTRUCTIONS
+### Format USB Drive:
+- Format your USB drive using your Xbox 360 console. Then, copy all the provided files to the USB drive.
+
+### First-Time Setup:
+
+- If this is your first time running XeUnshackle, delete the XeUnshackleAutoStart.txt file from the BadUpdatePayload folder. This allows the app to run and dump necessary files (see Step 6).
+
+- If you have already saved the required files, keep XeUnshackleAutoStart.txt (set to 0.00) to bypass the app and redirect directly to the Xbox Home after the exploit.
+
+### Prepare Console:
+- Insert the USB drive into your Xbox 360.
+- Recommended: Disconnect Ethernet or Wi-Fi to prevent connections to Xbox Live.
+
+### Run Exploit:
+- Power on the console. You should see an ABadAvatar pop-up message. Wait for the exploit to complete successfully.
+
+### Post-Exploit:
+- After a successful exploit, the XeUnshackle app will load.
+- Optional: Reconnect Ethernet/Wi-Fi at this point if needed.
+
+### Save Console Data:
+
+- Press X to save console information.
+
+- Press Y to dump the 1bl file.
+- (The original MAC address is dumped automatically.)
+
+### Enable Auto-Start:
+- Press Start to enable auto-start. On subsequent exploits, you will be redirected directly to Xbox Home.
+
+
+## USAGE NOTES
+- XEX Files: No patching is required. Any software that runs on RGH/JTAG consoles should work.
+
+### Configuration Files:
+- Store your launch.ini (Dashlaunch config) and plugins on a USB drive for easy editing.
+
+### Plugins:
+- Plugins load when you exit the app. Insert Ethernet before exiting if using network-dependent plugins (e.g., stealth servers).
+
+### Dashlaunch Dependency:
+- A key executable required by Dashlaunch is copied to your storage device. If no HDD is present, this is the USB drive. Keep it connected for Dashlaunch to function.
+
+### Remote Access:
+- The provided files and config enable remote access via Xbox Neighborhood and JRPC2-based tools.
+
+### Important Note: Stealth Servers
+- Use stealth servers at your own risk. Unlike modded consoles, retail systems cannot be unbanned if detected.
+
+### NAND Backup:
+- Highly recommended to dump your NAND before using any stealth server plugin.
+
+### MAC Address Change:
+- Stealth plugins often change the console’s MAC address. This change is persistent and stored in the NAND.
+
+### MAC Backup:
+- A backup of your original MAC address is automatically created in the BadUpdatePayload folder on first launch.
+
+
+### RECOMMENDED APPS
+- Simple 360 NAND Flasher
+- XEXMenu
+
+
+## DISCLAIMER
+YOU ARE SOLELY RESPONSIBLE FOR ANY CHANGES MADE TO YOUR CONSOLE AND ANY RESULTING CONSEQUENCES. USE THIS SOFTWARE WITH CAUTION.
 
 > [!IMPORTANT]  
 > **THIS APP IS RELEASED AS IS.**  
@@ -27,7 +104,7 @@ Nothing here is particularly new. It's simply a collection of existing code that
 - Reverts any patches applied by the [Xbox360BadUpdate](https://github.com/grimdoomer/Xbox360BadUpdate) exploit we no longer need.
 - Restores the default state of the Ring of Light and allows controller syncing to function as normal. Thanks [InvoxiPlayGames](https://github.com/InvoxiPlayGames)
 - Loads a slightly modified version of launch.xex (Dashlaunch). Due to it not being stored within the nands filesystem it is loaded from app memory and lhelper.xex is copied to either Hdd or Usb root depending on what's available at load time.
-- Simple GUI consisting of a short boot animation video followed by a page displaying both the CPUKey and DVDKey of the console.
+- Simple GUI displaying both the CPUKey and DVDKey of the console.
 - Ability to dump 1BL to file via button press. This may be particularly useful for those wanting to use the Low Level [Xenon](https://github.com/xenon-emu/xenon) Emulator.
 - Automatic dumping of the current MAC address on first load. This is often changed by stealth servers during the initial KV spoofing. Only other way to retrieve the original is from a nand backup taken BEFORE loading a stealth.
 - Applies Usbdsec patches to allow non-360 XInput controllers. Thanks [InvoxiPlayGames](https://github.com/InvoxiPlayGames)
@@ -43,7 +120,9 @@ Dashlaunch will then attempt to load any plugins set when exiting the app and re
 Any files saved/dumped can be found in the BadUpdatePayload folder of the usb.
 
 ## Credits
+- [Byrom90](https://github.com/Byrom90) - [XeUnshackle](https://github.com/Byrom90/XeUnshackle) app
 - [grimdoomer](https://github.com/grimdoomer) - [Xbox360BadUpdate](https://github.com/grimdoomer/Xbox360BadUpdate) exploit
+- [shutterbug2000](https://github.com/shutterbug2000) - [ABadAvatar](https://github.com/shutterbug2000/ABadAvatar) exploit
 - cOz - xeBuild patches, Dashlaunch & much more
 - [Visual Studio / Goobycorp](https://github.com/GoobyCorp)
 - Diamond
