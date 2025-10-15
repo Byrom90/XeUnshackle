@@ -29,8 +29,8 @@ LocalisationMessages_t english = {
     L"Original MAC dumped to OriginalMACAddress.bin",
     L"Failed to dump original MAC!",
     // Save Auto-Start
-    L"Auto-Start saved to AutoStart.txt",
-    L"Failed to save AutoStart.txt!",
+    L"Auto-Start saved to XeUnshackleAutoStart.txt",
+    L"Failed to save XeUnshackleAutoStart.txt!",
     // Main Screen Text
     L"All patches have now been applied!\nRegular JTAG/RGH functionality should now be possible on your system.\n\nTHIS IS NOT PERSISTENT!\nYour console will return to a completely stock unmodified state once shut down.\nIt is HIGHLY recommended that you now go dump a copy of your nand!",
     L"Any plugins set in launch.ini will load when you exit this app.\nLiveBlock should be working now if enabled in the launch.ini.\nPlug in your ethernet cable before exiting to allow stealths to authenticate correctly.",
@@ -65,8 +65,8 @@ LocalisationMessages_t spanish = {
     L"MAC original volcada a OriginalMACAddress.bin",
     L"No se pudo volcar el original MAC!",
     // Save Auto-Start
-    L"Inicio Automático guardado en AutoStart.txt",
-    L"¡Error al guardar AutoStart.txt!",
+    L"Inicio Automático guardado en XeUnshackleAutoStart.txt",
+    L"¡Error al guardar XeUnshackleAutoStart.txt!",
     // Main Screen Text
     L"¡Todos los parches han sido aplicados!\nLa funcionalidad JTAG/RGH regular ahora debería ser posible en tu sistema\n\nESTO NO ES PERMANENTE!\nTu consola volverá a un estado completamente original y sin modificaciones\nuna vez que se apague la consola\nSe recomienda altamente que ahora hagas una copia de seguridad de tu NAND!",
     L"Cualquier complemento configurado en launch.ini se cargará cuando salgas de esta aplicación\nLiveBlock debería estar funcionando ahora si está habilitado en launch.ini.\nConecta tu cable de Internet antes de salir para permitir que los servicios\nque necesiten autenticación lo hagan correctamente",
@@ -106,8 +106,8 @@ LocalisationMessages_t brazilian_portuguese = {
     L"MAC original despejado em OriginalMACAddress.bin",
     L"Não foi possível despejar o MAC original!",
     // Save Auto-Start
-    L"Início Automático salvo em AutoStart.txt",
-    L"Falha ao salvar o AutoStart.txt!",
+    L"Início Automático salvo em XeUnshackleAutoStart.txt",
+    L"Falha ao salvar o XeUnshackleAutoStart.txt!",
     // Main Screen Text
     L"Todos os patches foram aplicados!\nAgora a funcionalidade JTAG/RGH regular deve ser possível no seu sistema.\n\nISSO NÃO É PERSISTENTE!\nSeu console retornará a um estado completamente original e não modificado assim que for desligado.\nÉ ALTAMENTE recomendado que você faça agora o dump de uma cópia do seu nand!",
     L"Todos os plugins definidos em launch.ini serão carregados quando você sair deste aplicativo.\nO LiveBlock deve estar funcionando agora se estiver habilitado em launch.ini.\nConecte seu cabo de rede antes de sair para permitir que os stealths sejam autenticados corretamente.",

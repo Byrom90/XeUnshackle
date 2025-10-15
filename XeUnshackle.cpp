@@ -26,6 +26,7 @@
 #include "stdafx.h"
 
 FLOAT APP_VERS = 1.03;
+const wchar_t* APP_FLAVOR = L"Auto-Start";
 
 const CHAR* g_strMovieName = "embed:\\VID";
 
@@ -541,7 +542,7 @@ VOID __cdecl main()
 
     // Grab some stuff for display in the ui
     ZeroMemory(wTitleHeaderBuf, sizeof(wTitleHeaderBuf));
-    swprintf_s(wTitleHeaderBuf, L"%ls XeUnshackle v%.2f BETA %ls", GLYPH_RIGHT_TICK, APP_VERS, GLYPH_LEFT_TICK);
+    swprintf_s(wTitleHeaderBuf, L"%ls XeUnshackle v%.2f BETA (%ls) %ls", GLYPH_RIGHT_TICK, APP_VERS, APP_FLAVOR, GLYPH_LEFT_TICK);
     // Motherboard type
     ZeroMemory(wConTypeBuf, sizeof(wConTypeBuf));
     swprintf_s(wConTypeBuf, L"Console type: %S", GetMoboByHWFlags().c_str());
