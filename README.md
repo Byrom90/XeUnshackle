@@ -21,6 +21,9 @@ Access via the Syscall0 backdoor is also available upon completion for apps requ
 
 Nothing here is particularly new. It's simply a collection of existing code that has been adapted and packaged for use with this exploit.
 
+## Build / video conversion
+See BUILD.md and VideoFormatGuide.MD
+
 ## Features
 - Applies a full complete patchset of both HV & Kernel patches. These are the same exact patches that are usually applied when building a modified nand image using xeBuild for RGH/JTAG consoles.
 - Support for both Retail & Devkit signed xex files. Essentially any plugins or executables that run natively on RGH/JTAG modified consoles _should_ work.

@@ -341,8 +341,8 @@ HRESULT XeUnshackle::Render()
         m_Font.DrawText(0, 490, YellowText, wCPUKeyBuf);
         m_Font.DrawText(0, 520, YellowText, wDVDKeyBuf);
 
-        m_Font.DrawText(0, 570, YellowText, L"https://github.com/Byrom90/XeUnshackle");
-        m_Font.DrawText(0, 600, YellowText, L"https://byrom.uk");
+        m_Font.DrawText(0, 570, YellowText, L"Forked: https://github.com/TheRealMSL/XeUnshackle-Old360BootAnimation");
+        m_Font.DrawText(0, 600, YellowText, L"Original: https://github.com/Byrom90/XeUnshackle");
 
         // User input with buttons - Make these white so they display correctly and stand out to the user
         m_Font.DrawText(840, 530, WhiteText, currentLocalisation->MainScrBtnSaveInfo);// X button icon with text 
